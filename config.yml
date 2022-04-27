@@ -1,0 +1,4 @@
+jtype: WeaviateIndexer
+metas:
+  py_modules:
+    - executor.py
