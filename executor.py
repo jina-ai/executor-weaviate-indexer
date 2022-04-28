@@ -7,7 +7,6 @@ from jina.logging.logger import JinaLogger
 class WeaviateIndexer(Executor):
     """WeaviateIndexer indexes Documents into a weaviate server using DocumentArray  with ` `storage='weaviate'`"""
 
-
     def __init__(
         self,
         host: Optional[str] = 'localhost',
@@ -17,7 +16,7 @@ class WeaviateIndexer(Executor):
         n_dim: Optional[int] = None,
         ef: Optional[int] = None,
         ef_construction: Optional[int] = None,
-        max_onnections: Optional[int] = None,
+        max_connections: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -32,7 +31,7 @@ class WeaviateIndexer(Executor):
                 'n_dim': n_dim,
                 'ef': ef,
                 'ef_construction': ef_construction,
-                'max_onnections': max_onnections,
+                'max_connections': max_connections,
             },
         )
         self.logger = JinaLogger(self.metas.name)
@@ -63,6 +62,7 @@ class WeaviateIndexer(Executor):
         function. They overwrite the original match_args arguments.
         """
         docs.match(self._index)
+
     @requests(on='/delete')
     def delete(self, parameters: Dict, **kwargs):
         """Delete entries from the index by id
