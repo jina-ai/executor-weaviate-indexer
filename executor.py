@@ -1,6 +1,6 @@
+from jina import Executor, requests
 from typing import Optional, Dict
-
-from jina import Executor, DocumentArray, requests
+from docarray import DocumentArray
 from jina.logging.logger import JinaLogger
 
 
@@ -34,6 +34,7 @@ class WeaviateIndexer(Executor):
                 'max_connections': max_connections,
             },
         )
+
         self.logger = JinaLogger(self.metas.name)
 
     @requests(on='/index')
@@ -42,9 +43,6 @@ class WeaviateIndexer(Executor):
         docs: 'DocumentArray',
         **kwargs,
     ):
-        """All Documents to the DocumentArray
-        :param docs: the docs to add
-        """
         if docs:
             self._index.extend(docs)
 
@@ -52,7 +50,6 @@ class WeaviateIndexer(Executor):
     def search(
         self,
         docs: 'DocumentArray',
-        parameters: Optional[Dict] = None,
         **kwargs,
     ):
         """Perform a vector similarity search and retrieve the full Document match
@@ -89,6 +86,15 @@ class WeaviateIndexer(Executor):
                     f'cannot update doc {doc.id} as it does not exist in storage'
                 )
 
+    @requests(on='/filter')
+    def filter(self, parameters: Dict, **kwargs):
+        """
+        Query documents from the indexer by the filter `query` object in parameters. The `query` object must follow the
+        specifications in the `find` method of `DocumentArray`: https://docarray.jina.ai/fundamentals/documentarray/find/#filter-with-query-operators
+        :param parameters: parameters of the request
+        """
+        return self._index.find(parameters['query'])
+
     @requests(on='/fill_embedding')
     def fill_embedding(self, docs: DocumentArray, **kwargs):
         """retrieve embedding of Documents by id
@@ -102,3 +108,6 @@ class WeaviateIndexer(Executor):
     def clear(self, **kwargs):
         """clear the database"""
         self._index.clear()
+
+    def close(self) -> None:
+        del self._index
