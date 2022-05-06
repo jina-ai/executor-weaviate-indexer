@@ -58,22 +58,22 @@ def docker_compose():
 
 
 def test_init(docker_compose):
-    indexer = WeaviateIndexer(collection_name='test')
+    indexer = WeaviateIndexer(name='Test')
 
     assert isinstance(indexer._index, DocumentArrayWeaviate)
-    assert indexer._index.collection_name == 'test'
-    assert indexer._index._config.port == 6333
+    assert indexer._index.name == 'Test'
+    assert indexer._index._config.port == 8080
 
 
 def test_index(docs, docker_compose):
-    indexer = WeaviateIndexer(collection_name='test')
+    indexer = WeaviateIndexer(name='Test')
     indexer.index(docs)
 
     assert len(indexer._index) == len(docs)
 
 
 def test_delete(docs, docker_compose):
-    indexer = WeaviateIndexer(collection_name='test')
+    indexer = WeaviateIndexer(name='Test')
     indexer.index(docs)
 
     ids = ['doc1', 'doc2', 'doc3']
@@ -85,7 +85,7 @@ def test_delete(docs, docker_compose):
 
 def test_update(docs, update_docs, docker_compose):
     # index docs first
-    indexer = WeaviateIndexer(collection_name='test')
+    indexer = WeaviateIndexer(name='Test')
     indexer.index(docs)
     assert_document_arrays_equal(indexer._index, docs)
 
@@ -96,13 +96,13 @@ def test_update(docs, update_docs, docker_compose):
 
 
 def test_fill_embeddings(docker_compose):
-    indexerindexer = WeaviateIndexer(collection_name='test', distance='euclidean', n_dim=1)
+    indexer = WeaviateIndexer(name='Test', distance='euclidean', n_dim=1)
 
-    indexerindexer.index(DocumentArray([Document(id='a', embedding=np.array([1]))]))
+    indexer.index(DocumentArray([Document(id='a', embedding=np.array([1.0]))]))
     search_docs = DocumentArray([Document(id='a')])
-    indexerindexer.fill_embedding(search_docs)
+    indexer.fill_embedding(search_docs)
     assert search_docs['a'].embedding is not None
-    assert (search_docs['a'].embedding == np.array([1])).all()
+    assert (search_docs['a'].embedding == np.array([1.0])).all()
 
     with pytest.raises(KeyError, match='b'):
         indexer.fill_embedding(DocumentArray([Document(id='b')]))
@@ -116,7 +116,7 @@ def test_filter(docker_compose):
     docs[2].tags['y'] = 0.6
     docs[3].tags['x'] = 0.8
 
-    indexer = WeaviateIndexer(collection_name='test')
+    indexer = WeaviateIndexer(name='Test')
     indexer.index(docs)
 
     result = indexer.filter(parameters={'query': {'text': {'$eq': 'hello'}}})
@@ -129,19 +129,19 @@ def test_filter(docker_compose):
 
 
 def test_persistence(docs, docker_compose):
-    indexer1 = WeaviateIndexer(collection_name='test', distance='euclidean')
+    indexer1 = WeaviateIndexer(name='Test', distance='euclidean')
     indexer1.index(docs)
-    indexer2 = WeaviateIndexer(collection_name='test', distance='euclidean')
+    indexer2 = WeaviateIndexer(name='Test', distance='euclidean')
     assert_document_arrays_equal(indexer2._index, docs)
 
 
 @pytest.mark.parametrize('metric, metric_name', [('euclidean', 'euclid_similarity'), ('cosine', 'cosine_similarity')])
 def test_search(metric, metric_name, docs, docker_compose):
     # test general/normal case
-    indexer = WeaviateIndexer(collection_name='test', distance=metric)
+    indexer = WeaviateIndexer(name='Test', distance=metric)
     indexer.index(docs)
     query = DocumentArray([Document(embedding=np.random.rand(128)) for _ in range(10)])
-    indexer.search(query, {})
+    indexer.search(query)
 
     for doc in query:
         similarities = [

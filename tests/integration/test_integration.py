@@ -9,7 +9,7 @@ from executor import WeaviateIndexer
 def test_flow(docker_compose):
     f = Flow().add(
         uses=WeaviateIndexer,
-        uses_with={'collection_name': 'test', 'n_dim': 2},
+        uses_with={'name': 'Test', 'n_dim': 2},
     )
 
     with f:
@@ -32,7 +32,7 @@ def test_flow(docker_compose):
 
 def test_reload_keep_state(docker_compose):
     docs = DocumentArray([Document(embedding=np.random.rand(3)) for _ in range(2)])
-    f = Flow().add(uses=WeaviateIndexer, uses_with={'collection_name': 'test', 'n_dim': 3},)
+    f = Flow().add(uses=WeaviateIndexer, uses_with={'name': 'Test', 'n_dim': 3},)
 
     with f:
         f.index(docs)
