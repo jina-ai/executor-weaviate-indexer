@@ -2,12 +2,12 @@ import os
 import time
 
 import pytest
-from docarray.array.qdrant import DocumentArrayQdrant
+from docarray.array.weaviate import DocumentArrayWeaviate
 from docarray import Document, DocumentArray
 
 import numpy as np
 
-from executor import QdrantIndexer
+from executor import WeaviateIndexer
 
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 compose_yml = os.path.abspath(os.path.join(cur_dir, '../docker-compose.yml'))
@@ -58,54 +58,54 @@ def docker_compose():
 
 
 def test_init(docker_compose):
-    qindex = QdrantIndexer(collection_name='test')
+    indexer = WeaviateIndexer(collection_name='test')
 
-    assert isinstance(qindex._index, DocumentArrayQdrant)
-    assert qindex._index.collection_name == 'test'
-    assert qindex._index._config.port == 6333
+    assert isinstance(indexer._index, DocumentArrayWeaviate)
+    assert indexer._index.collection_name == 'test'
+    assert indexer._index._config.port == 6333
 
 
 def test_index(docs, docker_compose):
-    qindex = QdrantIndexer(collection_name='test')
-    qindex.index(docs)
+    indexer = WeaviateIndexer(collection_name='test')
+    indexer.index(docs)
 
-    assert len(qindex._index) == len(docs)
+    assert len(indexer._index) == len(docs)
 
 
 def test_delete(docs, docker_compose):
-    qindex = QdrantIndexer(collection_name='test')
-    qindex.index(docs)
+    indexer = WeaviateIndexer(collection_name='test')
+    indexer.index(docs)
 
     ids = ['doc1', 'doc2', 'doc3']
-    qindex.delete({'ids': ids})
-    assert len(qindex._index) == len(docs) - 3
+    indexer.delete({'ids': ids})
+    assert len(indexer._index) == len(docs) - 3
     for doc_id in ids:
-        assert doc_id not in qindex._index
+        assert doc_id not in indexer._index
 
 
 def test_update(docs, update_docs, docker_compose):
     # index docs first
-    qindex = QdrantIndexer(collection_name='test')
-    qindex.index(docs)
-    assert_document_arrays_equal(qindex._index, docs)
+    indexer = WeaviateIndexer(collection_name='test')
+    indexer.index(docs)
+    assert_document_arrays_equal(indexer._index, docs)
 
     # update first doc
-    qindex.update(update_docs)
-    assert qindex._index[0].id == 'doc1'
-    assert qindex._index['doc1'].text == 'modified'
+    indexer.update(update_docs)
+    assert indexer._index[0].id == 'doc1'
+    assert indexer._index['doc1'].text == 'modified'
 
 
 def test_fill_embeddings(docker_compose):
-    qindex = QdrantIndexer(collection_name='test', distance='euclidean', n_dim=1)
+    indexerindexer = WeaviateIndexer(collection_name='test', distance='euclidean', n_dim=1)
 
-    qindex.index(DocumentArray([Document(id='a', embedding=np.array([1]))]))
+    indexerindexer.index(DocumentArray([Document(id='a', embedding=np.array([1]))]))
     search_docs = DocumentArray([Document(id='a')])
-    qindex.fill_embedding(search_docs)
+    indexerindexer.fill_embedding(search_docs)
     assert search_docs['a'].embedding is not None
     assert (search_docs['a'].embedding == np.array([1])).all()
 
     with pytest.raises(KeyError, match='b'):
-        qindex.fill_embedding(DocumentArray([Document(id='b')]))
+        indexer.fill_embedding(DocumentArray([Document(id='b')]))
 
 
 def test_filter(docker_compose):
@@ -116,10 +116,10 @@ def test_filter(docker_compose):
     docs[2].tags['y'] = 0.6
     docs[3].tags['x'] = 0.8
 
-    qindex = QdrantIndexer(collection_name='test')
-    qindex.index(docs)
+    indexer = WeaviateIndexer(collection_name='test')
+    indexer.index(docs)
 
-    result = qindex.filter(parameters={'query': {'text': {'$eq': 'hello'}}})
+    result = indexer.filter(parameters={'query': {'text': {'$eq': 'hello'}}})
     assert len(result) == 1
     assert result[0].text == 'hello'
 
@@ -129,16 +129,16 @@ def test_filter(docker_compose):
 
 
 def test_persistence(docs, docker_compose):
-    qindex1 = QdrantIndexer(collection_name='test', distance='euclidean')
-    qindex1.index(docs)
-    qindex2 = QdrantIndexer(collection_name='test', distance='euclidean')
-    assert_document_arrays_equal(qindex2._index, docs)
+    indexer1 = WeaviateIndexer(collection_name='test', distance='euclidean')
+    indexer1.index(docs)
+    indexer2 = WeaviateIndexer(collection_name='test', distance='euclidean')
+    assert_document_arrays_equal(indexer2._index, docs)
 
 
 @pytest.mark.parametrize('metric, metric_name', [('euclidean', 'euclid_similarity'), ('cosine', 'cosine_similarity')])
 def test_search(metric, metric_name, docs, docker_compose):
     # test general/normal case
-    indexer = QdrantIndexer(collection_name='test', distance=metric)
+    indexer = WeaviateIndexer(collection_name='test', distance=metric)
     indexer.index(docs)
     query = DocumentArray([Document(embedding=np.random.rand(128)) for _ in range(10)])
     indexer.search(query, {})
