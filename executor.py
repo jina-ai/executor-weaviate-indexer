@@ -43,8 +43,7 @@ class WeaviateIndexer(Executor):
         docs: 'DocumentArray',
         **kwargs,
     ):
-        if docs:
-            self._index.extend(docs)
+        self._index.extend(docs)
 
     @requests(on='/search')
     def search(
