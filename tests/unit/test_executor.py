@@ -1,11 +1,10 @@
 import os
 import time
 
-import pytest
-from docarray.array.weaviate import DocumentArrayWeaviate
-from docarray import Document, DocumentArray
-
 import numpy as np
+import pytest
+from docarray import Document, DocumentArray
+from docarray.array.weaviate import DocumentArrayWeaviate
 
 from executor import WeaviateIndexer
 
