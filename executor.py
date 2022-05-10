@@ -13,7 +13,7 @@ class WeaviateIndexer(Executor):
         port: int = 8080,
         protocol: str = 'http',
         name: str = 'Persisted',
-        n_dim: int = None,
+        n_dim: int = 128,
         ef: Optional[int] = None,
         ef_construction: Optional[int] = None,
         max_connections: Optional[int] = None,
