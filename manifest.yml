@@ -1,5 +1,5 @@
 manifest_version: 1
 name: WeaviateIndexer
 description: WeaviateIndexer indexes Documents into a weaviate server using DocumentArray  with ` `storage='weaviate'`
-url: https://github.com/yjina-ai/WeaviateIndexer
+url: https://github.com/jina-ai/executor-weaviate-indexer
 keywords: ['indexer weaviate ann similarity_search pre-filtering database 3.0-exclusive']
