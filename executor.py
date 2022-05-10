@@ -9,11 +9,11 @@ class WeaviateIndexer(Executor):
 
     def __init__(
         self,
-        host: Optional[str] = 'localhost',
-        port: Optional[int] = 8080,
-        protocol: Optional[str] = 'http',
-        name: Optional[str] = None,
-        n_dim: Optional[int] = None,
+        host: str = 'localhost',
+        port: int = 8080,
+        protocol: str = 'http',
+        name: str = 'Persisted',
+        n_dim: int = None,
         ef: Optional[int] = None,
         ef_construction: Optional[int] = None,
         max_connections: Optional[int] = None,
