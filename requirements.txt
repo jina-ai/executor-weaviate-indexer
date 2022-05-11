@@ -1,1 +1,1 @@
-
+docarray[weaviate]>=0.13.9

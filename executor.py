@@ -1,24 +1,39 @@
+from jina import Executor, requests
 from typing import Optional, Dict
-
-from jina import Executor, DocumentArray, requests
+from docarray import DocumentArray
 from jina.logging.logger import JinaLogger
 
 
 class WeaviateIndexer(Executor):
-    """WeaviateIndexer indexes Documents into a weaviate server using DocumentArray  with ` `storage='weaviate'`"""
+    """WeaviateIndexer indexes Documents into a Weaviate server using DocumentArray  with `storage='weaviate'`"""
 
     def __init__(
         self,
-        host: Optional[str] = 'localhost',
-        port: Optional[int] = 8080,
-        protocol: Optional[str] = 'http',
-        name: Optional[str] = None,
-        n_dim: Optional[int] = None,
+        host: str = 'localhost',
+        port: int = 8080,
+        protocol: str = 'http',
+        name: str = 'Persisted',
+        n_dim: int = 128,
         ef: Optional[int] = None,
         ef_construction: Optional[int] = None,
         max_connections: Optional[int] = None,
         **kwargs,
     ):
+        """
+        :param host: Hostname of the Weaviate server
+        :param port: port of the Weaviate server
+        :param protocol: protocol to be used. Can be 'http' or 'https'
+        :param name: Weaviate class name used for the storage
+        :param n_dim: number of dimensions
+        :param ef: The size of the dynamic list for the nearest neighbors (used during the search). The higher ef is
+            chosen, the more accurate, but also slower a search becomes. Defaults to the default `ef` in the weaviate
+            server.
+        :param ef_construction: The size of the dynamic list for the nearest neighbors (used during the construction).
+            Controls index search speed/build speed tradeoff. Defaults to the default `ef_construction` in the weaviate
+            server.
+        :param max_connections: The maximum number of connections per element in all layers. Defaults to the default
+            `max_connections` in the weaviate server.
+        """
         super().__init__(**kwargs)
 
         self._index = DocumentArray(
@@ -34,6 +49,7 @@ class WeaviateIndexer(Executor):
                 'max_connections': max_connections,
             },
         )
+
         self.logger = JinaLogger(self.metas.name)
 
     @requests(on='/index')
@@ -42,24 +58,20 @@ class WeaviateIndexer(Executor):
         docs: 'DocumentArray',
         **kwargs,
     ):
-        """All Documents to the DocumentArray
-        :param docs: the docs to add
+        """Index new documents
+        :param docs: the Documents to index
         """
-        if docs:
-            self._index.extend(docs)
+        self._index.extend(docs)
 
     @requests(on='/search')
     def search(
         self,
         docs: 'DocumentArray',
-        parameters: Optional[Dict] = None,
         **kwargs,
     ):
         """Perform a vector similarity search and retrieve the full Document match
 
         :param docs: the Documents to search with
-        :param parameters: the runtime arguments to `DocumentArray`'s match
-        function. They overwrite the original match_args arguments.
         """
         docs.match(self._index)
 
@@ -67,7 +79,10 @@ class WeaviateIndexer(Executor):
     def delete(self, parameters: Dict, **kwargs):
         """Delete entries from the index by id
 
-        :param parameters: parameters to the request
+        :param parameters: parameters of the request
+
+        Keys accepted:
+            - 'ids': List of Document IDs to be deleted
         """
         deleted_ids = parameters.get('ids', [])
         if len(deleted_ids) == 0:
@@ -76,9 +91,8 @@ class WeaviateIndexer(Executor):
 
     @requests(on='/update')
     def update(self, docs: DocumentArray, **kwargs):
-        """Update doc with the same id, if not present, append into storage
-
-        :param docs: the documents to update
+        """Update existing documents
+        :param docs: the Documents to update
         """
 
         for doc in docs:
@@ -89,16 +103,28 @@ class WeaviateIndexer(Executor):
                     f'cannot update doc {doc.id} as it does not exist in storage'
                 )
 
+    @requests(on='/filter')
+    def filter(self, parameters: Dict, **kwargs):
+        """
+        Query documents from the indexer by the filter `query` object in parameters. The `query` object must follow the
+        specifications in the `find` method of `DocumentArray` using Weaviate: https://docarray.jina.ai/fundamentals/documentarray/find/#filter-with-query-operators
+        :param parameters: parameters of the request
+        """
+        return self._index.find(parameters['query'])
+
     @requests(on='/fill_embedding')
     def fill_embedding(self, docs: DocumentArray, **kwargs):
-        """retrieve embedding of Documents by id
+        """Fill embedding of Documents by id
 
-        :param docs: DocumentArray to search with
+        :param docs: DocumentArray to be filled with Embeddings from the index
         """
         for doc in docs:
             doc.embedding = self._index[doc.id].embedding
 
     @requests(on='/clear')
     def clear(self, **kwargs):
-        """clear the database"""
+        """Clear the index"""
         self._index.clear()
+
+    def close(self) -> None:
+        del self._index
