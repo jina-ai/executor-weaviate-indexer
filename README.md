@@ -26,7 +26,7 @@ import numpy as np
 f = Flow().add(
     uses='jinahub+docker://WeaviateIndexer',
     uses_with={
-        'name': 'MyIndexer',
+        'name': 'Indexer',
         'n_dim': 256,
     }
 )
@@ -44,7 +44,7 @@ import numpy as np
 
 f = Flow().add(uses='jinahub://WeaviateIndexer',
     uses_with={
-        'name': 'MyIndexer',
+        'name': 'Indexer',
         'n_dim': 256,
     }
 )
