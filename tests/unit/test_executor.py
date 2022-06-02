@@ -155,3 +155,19 @@ def test_clear(docs, docker_compose):
     assert len(indexer._index) == 6
     indexer.clear()
     assert len(indexer._index) == 0
+
+
+def test_columns(docker_compose):
+    n_dim = 3
+    indexer = WeaviateIndexer(
+        name='Test', n_dim=n_dim, columns=[('price', 'float')]
+    )
+
+    docs = DocumentArray(
+        [
+            Document(id=f'r{i}', embedding=i * np.ones(n_dim), tags={'price': i})
+            for i in range(10)
+        ]
+    )
+    indexer.index(docs)
+    assert len(indexer._index) == 10
