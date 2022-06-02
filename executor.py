@@ -70,13 +70,17 @@ class WeaviateIndexer(Executor):
     def search(
         self,
         docs: 'DocumentArray',
+        parameters: Dict = {},
         **kwargs,
     ):
         """Perform a vector similarity search and retrieve the full Document match
 
         :param docs: the Documents to search with
+        :param parameters: Dictionary to define the `filter` that you want to use.
+        :param kwargs: additional kwargs for the endpoint
+
         """
-        docs.match(self._index)
+        docs.match(self._index, filter=parameters.get('filter', None))
 
     @requests(on='/delete')
     def delete(self, parameters: Dict, **kwargs):

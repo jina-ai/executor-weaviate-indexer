@@ -1,5 +1,6 @@
 import os
 import time
+import operator
 
 import numpy as np
 import pytest
@@ -134,7 +135,10 @@ def test_persistence(docs, docker_compose):
     assert_document_arrays_equal(indexer2._index, docs)
 
 
-@pytest.mark.parametrize('metric, metric_name', [('euclidean', 'euclid_similarity'), ('cosine', 'cosine_similarity')])
+@pytest.mark.parametrize(
+    'metric, metric_name',
+    [('euclidean', 'euclid_similarity'), ('cosine', 'cosine_similarity')],
+)
 def test_search(metric, metric_name, docs, docker_compose):
     # test general/normal case
     indexer = WeaviateIndexer(name='Test', distance=metric)
@@ -143,9 +147,7 @@ def test_search(metric, metric_name, docs, docker_compose):
     indexer.search(query)
 
     for doc in query:
-        similarities = [
-            t[metric_name].value for t in doc.matches[:, 'scores']
-        ]
+        similarities = [t[metric_name].value for t in doc.matches[:, 'scores']]
         assert sorted(similarities, reverse=True) == similarities
 
 
@@ -159,9 +161,7 @@ def test_clear(docs, docker_compose):
 
 def test_columns(docker_compose):
     n_dim = 3
-    indexer = WeaviateIndexer(
-        name='Test', n_dim=n_dim, columns=[('price', 'float')]
-    )
+    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'float')])
 
     docs = DocumentArray(
         [
@@ -171,3 +171,43 @@ def test_columns(docker_compose):
     )
     indexer.index(docs)
     assert len(indexer._index) == 10
+
+
+numeric_operators_weaviate = {
+    'GreaterThanEqual': operator.ge,
+    'GreaterThan': operator.gt,
+    'LessThanEqual': operator.le,
+    'LessThan': operator.lt,
+    'Equal': operator.eq,
+    'NotEqual': operator.ne,
+}
+
+
+@pytest.mark.parametrize('operator', list(numeric_operators_weaviate.keys()))
+def test_filtering(docker_compose, operator: str):
+    n_dim = 3
+    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'int')])
+
+    docs = DocumentArray(
+        [
+            Document(id=f'r{i}', embedding=np.random.rand(n_dim), tags={'price': i})
+            for i in range(50)
+        ]
+    )
+    indexer.index(docs)
+
+    for threshold in [10, 20, 30]:
+
+        filter_ = {'path': ['price'], 'operator': operator, 'valueInt': threshold}
+
+        doc_query = DocumentArray([Document(embedding=np.random.rand(n_dim))])
+        indexer.search(doc_query, parameters={'filter': filter_})
+
+        assert len(doc_query[0].matches)
+
+        assert all(
+            [
+                numeric_operators_weaviate[operator](r.tags['price'], threshold)
+                for r in doc_query[0].matches
+            ]
+        )
