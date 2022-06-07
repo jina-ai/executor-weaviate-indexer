@@ -59,14 +59,14 @@ numeric_operators_weaviate = {
 
 @pytest.mark.parametrize('operator', list(numeric_operators_weaviate.keys()))
 def test_filtering(docker_compose, operator: str):
-    n_dim = 3
+    n_dim = 2
 
     f = Flow().add(
         uses=WeaviateIndexer,
         uses_with={
             'name': 'Test',
             'n_dim': n_dim,
-            'columns': [('price', 'int')],
+            'columns': [('price', 'float')],
         },
     )
 
@@ -77,10 +77,15 @@ def test_filtering(docker_compose, operator: str):
         ]
     )
     with f:
+
         f.index(docs)
 
         for threshold in [10, 20, 30]:
-            filter_ = {'path': ['price'], 'operator': operator, 'valueInt': threshold}
+            filter_ = {
+                'path': ['price'],
+                'operator': operator,
+                'valueNumber': threshold,
+            }
             doc_query = DocumentArray([Document(embedding=np.random.rand(n_dim))])
             indexed_docs = f.search(doc_query, parameters={'filter': filter_})
 

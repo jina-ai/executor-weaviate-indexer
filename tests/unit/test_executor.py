@@ -159,9 +159,12 @@ def test_clear(docs, docker_compose):
     assert len(indexer._index) == 0
 
 
-def test_columns(docker_compose):
+@pytest.mark.parametrize('type_', ['int', 'float'])
+def test_columns(docker_compose, type_):
     n_dim = 3
-    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'float')])
+    indexer = WeaviateIndexer(
+        name=f'Test{type_}', n_dim=n_dim, columns=[('price', type_)]
+    )
 
     docs = DocumentArray(
         [
@@ -186,7 +189,7 @@ numeric_operators_weaviate = {
 @pytest.mark.parametrize('operator', list(numeric_operators_weaviate.keys()))
 def test_filtering(docker_compose, operator: str):
     n_dim = 3
-    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'int')])
+    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'float')])
 
     docs = DocumentArray(
         [
@@ -198,7 +201,7 @@ def test_filtering(docker_compose, operator: str):
 
     for threshold in [10, 20, 30]:
 
-        filter_ = {'path': ['price'], 'operator': operator, 'valueInt': threshold}
+        filter_ = {'path': ['price'], 'operator': operator, 'valueNumber': threshold}
 
         doc_query = DocumentArray([Document(embedding=np.random.rand(n_dim))])
         indexer.search(doc_query, parameters={'filter': filter_})

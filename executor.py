@@ -1,5 +1,5 @@
 from jina import Executor, requests
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Any
 from docarray import DocumentArray
 from jina.logging.logger import JinaLogger
 
@@ -65,6 +65,7 @@ class WeaviateIndexer(Executor):
         :param docs: the Documents to index
         """
         self._index.extend(docs)
+
 
     @requests(on='/search')
     def search(
