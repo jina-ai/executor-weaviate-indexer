@@ -109,23 +109,21 @@ def test_fill_embeddings(docker_compose):
 
 
 def test_filter(docker_compose):
-    docs = DocumentArray.empty(5)
-    docs[0].text = 'hello'
-    docs[1].text = 'world'
-    docs[2].tags['x'] = 0.3
-    docs[2].tags['y'] = 0.6
-    docs[3].tags['x'] = 0.8
 
-    indexer = WeaviateIndexer(name='Test')
+    docs = DocumentArray([Document(id=f'r{i}', tags={'price': i}) for i in range(10)])
+    n_dim = 3
+    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'float')])
+
     indexer.index(docs)
 
-    result = indexer.filter(parameters={'query': {'text': {'$eq': 'hello'}}})
-    assert len(result) == 1
-    assert result[0].text == 'hello'
+    max_price = 3
+    filter_ = {'path': 'price', 'operator': 'Equal', 'valueNumber': max_price}
 
-    result = docs.find({'tags__x': {'$gte': 0.5}})
+    result = indexer.filter(parameters={'filter': filter_})
+
     assert len(result) == 1
-    assert result[0].tags['x'] == 0.8
+    assert result[0].tags['price'] == max_price
+
 
 
 def test_persistence(docs, docker_compose):

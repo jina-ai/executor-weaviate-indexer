@@ -66,7 +66,6 @@ class WeaviateIndexer(Executor):
         """
         self._index.extend(docs)
 
-
     @requests(on='/search')
     def search(
         self,
@@ -118,7 +117,7 @@ class WeaviateIndexer(Executor):
         specifications in the `find` method of `DocumentArray` using Weaviate: https://docarray.jina.ai/fundamentals/documentarray/find/#filter-with-query-operators
         :param parameters: parameters of the request
         """
-        return self._index.find(parameters['query'])
+        return self._index.find(parameters.get('filter', None))
 
     @requests(on='/fill_embedding')
     def fill_embedding(self, docs: DocumentArray, **kwargs):
