@@ -108,9 +108,9 @@ For instance :
 from jina import Flow
 
 f = Flow().add(
-    uses='jinahub+docker://QdrantIndexer',
+    uses='jinahub+docker://WeaviateIndexer',
     uses_with={
-        'collection_name': 'test',
+        'name': 'Test',
         'n_dim': 3,
         'columns': [('price', 'float')],
     },
