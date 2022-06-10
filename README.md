@@ -139,4 +139,14 @@ with f:
     f.search(doc_query, parameters={'filter': filter_})
 ```
 
+### Search using filter only
+You can also search Documents using just a filter query (no vector search involved) using the `/filter` endpoint.
+Given the previous setup, you can perform a filter query like so:
+
+```python
+filter_ = {'path': ['price'], 'operator': 'LessThanEqual', 'valueInt': 30}
+with f:
+    f.post('/find', parameters={'filter': filter_})
+```
+
 For more information please refer to the docarray [documentation](https://docarray.jina.ai/advanced/document-store/weaviate/#vector-search-with-filter)
