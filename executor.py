@@ -1,5 +1,5 @@
 from jina import Executor, requests
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple, Any
 from docarray import DocumentArray
 from jina.logging.logger import JinaLogger
 
@@ -17,6 +17,7 @@ class WeaviateIndexer(Executor):
         ef: Optional[int] = None,
         ef_construction: Optional[int] = None,
         max_connections: Optional[int] = None,
+        columns: Optional[List[Tuple[str, str]]] = None,
         **kwargs,
     ):
         """
@@ -33,6 +34,7 @@ class WeaviateIndexer(Executor):
             server.
         :param max_connections: The maximum number of connections per element in all layers. Defaults to the default
             `max_connections` in the weaviate server.
+        :param columns: precise columns for the Indexer (used for filtering).
         """
         super().__init__(**kwargs)
 
@@ -47,6 +49,7 @@ class WeaviateIndexer(Executor):
                 'ef': ef,
                 'ef_construction': ef_construction,
                 'max_connections': max_connections,
+                'columns': columns,
             },
         )
 
@@ -67,13 +70,17 @@ class WeaviateIndexer(Executor):
     def search(
         self,
         docs: 'DocumentArray',
+        parameters: Dict = {},
         **kwargs,
     ):
         """Perform a vector similarity search and retrieve the full Document match
 
         :param docs: the Documents to search with
+        :param parameters: Dictionary to define the `filter` that you want to use.
+        :param kwargs: additional kwargs for the endpoint
+
         """
-        docs.match(self._index)
+        docs.match(self._index, filter=parameters.get('filter', None))
 
     @requests(on='/delete')
     def delete(self, parameters: Dict, **kwargs):
@@ -110,7 +117,7 @@ class WeaviateIndexer(Executor):
         specifications in the `find` method of `DocumentArray` using Weaviate: https://docarray.jina.ai/fundamentals/documentarray/find/#filter-with-query-operators
         :param parameters: parameters of the request
         """
-        return self._index.find(parameters['query'])
+        return self._index.find(parameters.get('filter', None))
 
     @requests(on='/fill_embedding')
     def fill_embedding(self, docs: DocumentArray, **kwargs):

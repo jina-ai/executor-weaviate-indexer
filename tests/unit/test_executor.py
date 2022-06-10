@@ -1,5 +1,6 @@
 import os
 import time
+import operator
 
 import numpy as np
 import pytest
@@ -108,23 +109,21 @@ def test_fill_embeddings(docker_compose):
 
 
 def test_filter(docker_compose):
-    docs = DocumentArray.empty(5)
-    docs[0].text = 'hello'
-    docs[1].text = 'world'
-    docs[2].tags['x'] = 0.3
-    docs[2].tags['y'] = 0.6
-    docs[3].tags['x'] = 0.8
 
-    indexer = WeaviateIndexer(name='Test')
+    docs = DocumentArray([Document(id=f'r{i}', tags={'price': i}) for i in range(10)])
+    n_dim = 3
+    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'float')])
+
     indexer.index(docs)
 
-    result = indexer.filter(parameters={'query': {'text': {'$eq': 'hello'}}})
-    assert len(result) == 1
-    assert result[0].text == 'hello'
+    max_price = 3
+    filter_ = {'path': 'price', 'operator': 'Equal', 'valueNumber': max_price}
 
-    result = docs.find({'tags__x': {'$gte': 0.5}})
+    result = indexer.filter(parameters={'filter': filter_})
+
     assert len(result) == 1
-    assert result[0].tags['x'] == 0.8
+    assert result[0].tags['price'] == max_price
+
 
 
 def test_persistence(docs, docker_compose):
@@ -134,7 +133,10 @@ def test_persistence(docs, docker_compose):
     assert_document_arrays_equal(indexer2._index, docs)
 
 
-@pytest.mark.parametrize('metric, metric_name', [('euclidean', 'euclid_similarity'), ('cosine', 'cosine_similarity')])
+@pytest.mark.parametrize(
+    'metric, metric_name',
+    [('euclidean', 'euclid_similarity'), ('cosine', 'cosine_similarity')],
+)
 def test_search(metric, metric_name, docs, docker_compose):
     # test general/normal case
     indexer = WeaviateIndexer(name='Test', distance=metric)
@@ -143,9 +145,7 @@ def test_search(metric, metric_name, docs, docker_compose):
     indexer.search(query)
 
     for doc in query:
-        similarities = [
-            t[metric_name].value for t in doc.matches[:, 'scores']
-        ]
+        similarities = [t[metric_name].value for t in doc.matches[:, 'scores']]
         assert sorted(similarities, reverse=True) == similarities
 
 
@@ -155,3 +155,60 @@ def test_clear(docs, docker_compose):
     assert len(indexer._index) == 6
     indexer.clear()
     assert len(indexer._index) == 0
+
+
+@pytest.mark.parametrize('type_', ['int', 'float'])
+def test_columns(docker_compose, type_):
+    n_dim = 3
+    indexer = WeaviateIndexer(
+        name=f'Test{type_}', n_dim=n_dim, columns=[('price', type_)]
+    )
+
+    docs = DocumentArray(
+        [
+            Document(id=f'r{i}', embedding=i * np.ones(n_dim), tags={'price': i})
+            for i in range(10)
+        ]
+    )
+    indexer.index(docs)
+    assert len(indexer._index) == 10
+
+
+numeric_operators_weaviate = {
+    'GreaterThanEqual': operator.ge,
+    'GreaterThan': operator.gt,
+    'LessThanEqual': operator.le,
+    'LessThan': operator.lt,
+    'Equal': operator.eq,
+    'NotEqual': operator.ne,
+}
+
+
+@pytest.mark.parametrize('operator', list(numeric_operators_weaviate.keys()))
+def test_filtering(docker_compose, operator: str):
+    n_dim = 3
+    indexer = WeaviateIndexer(name='Test', n_dim=n_dim, columns=[('price', 'float')])
+
+    docs = DocumentArray(
+        [
+            Document(id=f'r{i}', embedding=np.random.rand(n_dim), tags={'price': i})
+            for i in range(50)
+        ]
+    )
+    indexer.index(docs)
+
+    for threshold in [10, 20, 30]:
+
+        filter_ = {'path': ['price'], 'operator': operator, 'valueNumber': threshold}
+
+        doc_query = DocumentArray([Document(embedding=np.random.rand(n_dim))])
+        indexer.search(doc_query, parameters={'filter': filter_})
+
+        assert len(doc_query[0].matches)
+
+        assert all(
+            [
+                numeric_operators_weaviate[operator](r.tags['price'], threshold)
+                for r in doc_query[0].matches
+            ]
+        )
