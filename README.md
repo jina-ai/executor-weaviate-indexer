@@ -135,7 +135,7 @@ docs = DocumentArray(
 )
 
 
-filter_ = {'path': ['price'], 'operator': 'LessThanEqual', 'valueInt': 30}
+filter_ = {'path': ['price'], 'operator': 'LessThanEqual', 'valueNumber': 30}
 
 with f:
     f.index(docs)
