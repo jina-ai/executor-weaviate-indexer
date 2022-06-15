@@ -114,10 +114,10 @@ class WeaviateIndexer(Executor):
     def filter(self, parameters: Dict, **kwargs):
         """
         Query documents from the indexer by the filter `query` object in parameters. The `query` object must follow the
-        specifications in the `find` method of `DocumentArray` using Weaviate: https://docarray.jina.ai/fundamentals/documentarray/find/#filter-with-query-operators
-        :param parameters: parameters of the request
+        specifications in the `find` method of `DocumentArray` using Weaviate: https://docarray.jina.ai/advanced/document-store/weaviate/#example-of-find-with-a-filter-only
+        :param parameters: parameters of the request, containing the `filter` object.
         """
-        return self._index.find(parameters.get('filter', None))
+        return self._index.find(filter=parameters.get('filter', None))
 
     @requests(on='/fill_embedding')
     def fill_embedding(self, docs: DocumentArray, **kwargs):

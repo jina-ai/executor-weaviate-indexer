@@ -14,6 +14,10 @@ docker-compose :
 docker-compose -f tests/docker-compose.yml up -d
 ```
 
+Note that if you run a `Weaviate` service locally and try to run the `WeaviateIndexer` via `docker`, you 
+have to specify `'host': 'host.docker.internal'` instead of `localhost`, otherwise the client will not be 
+able to reach the service from within the container.
+
 ## Usage
 
 #### via Docker image (recommended)
@@ -131,12 +135,22 @@ docs = DocumentArray(
 )
 
 
-filter_ = {'path': ['price'], 'operator': 'LessThanEqual', 'valueInt': 30}
+filter_ = {'path': ['price'], 'operator': 'LessThanEqual', 'valueNumber': 30}
 
 with f:
     f.index(docs)
     doc_query = DocumentArray([Document(embedding=np.random.rand(3))])
     f.search(doc_query, parameters={'filter': filter_})
+```
+
+### Search using filter only
+You can also search Documents using just a filter query (no vector search involved) using the `/filter` endpoint.
+Given the previous setup, you can perform a filter query like so:
+
+```python
+filter_ = {'path': ['price'], 'operator': 'LessThanEqual', 'valueInt': 30}
+with f:
+    f.post('/find', parameters={'filter': filter_})
 ```
 
 For more information please refer to the docarray [documentation](https://docarray.jina.ai/advanced/document-store/weaviate/#vector-search-with-filter)
