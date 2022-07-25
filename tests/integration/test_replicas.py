@@ -10,7 +10,7 @@ def test_replicas(docker_compose):
 
     f = Flow().add(
         uses=WeaviateIndexer,
-        uses_with={'name': 'Testone', 'n_dim': n_dim},
+        uses_with={'name': 'Testone', 'n_dim': n_dim, 'ef': 10000},
     )
 
     docs_index = [Document(embedding=np.random.random(n_dim)) for _ in range(1000)]
@@ -45,7 +45,7 @@ def test_replicas_reindex(docker_compose):
 
     f = Flow().add(
         uses=WeaviateIndexer,
-        uses_with={'name': 'Testtwo', 'n_dim': n_dim},
+        uses_with={'name': 'Testtwo', 'n_dim': n_dim, 'ef': 10000},
     )
 
     docs_index = [Document(id=f'd{i}', embedding=np.random.random(n_dim)) for i in range(1000)]
