@@ -1,5 +1,5 @@
 from jina import Executor, requests
-from typing import Optional, Dict, List, Tuple, Any
+from typing import Optional, Dict, List, Tuple, Any, Union
 from docarray import DocumentArray
 from jina.logging.logger import JinaLogger
 
@@ -17,7 +17,7 @@ class WeaviateIndexer(Executor):
         ef: Optional[int] = None,
         ef_construction: Optional[int] = None,
         max_connections: Optional[int] = None,
-        columns: Optional[List[Tuple[str, str]]] = None,
+        columns: Optional[Union[List[Tuple[str, str]], Dict[str, str]]] = None,
         **kwargs,
     ):
         """
