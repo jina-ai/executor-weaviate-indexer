@@ -1,3 +1,5 @@
+import inspect
+
 from jina import Executor, requests
 from typing import Optional, Dict, List, Tuple, Any, Union
 from docarray import DocumentArray
@@ -14,6 +16,7 @@ class WeaviateIndexer(Executor):
         protocol: str = 'http',
         name: str = 'Persisted',
         n_dim: int = 128,
+        match_args: Optional[Dict] = None,
         ef: Optional[int] = None,
         ef_construction: Optional[int] = None,
         max_connections: Optional[int] = None,
@@ -26,6 +29,7 @@ class WeaviateIndexer(Executor):
         :param protocol: protocol to be used. Can be 'http' or 'https'
         :param name: Weaviate class name used for the storage
         :param n_dim: number of dimensions
+        :param match_args: the arguments to `DocumentArray`'s match function
         :param ef: The size of the dynamic list for the nearest neighbors (used during the search). The higher ef is
             chosen, the more accurate, but also slower a search becomes. Defaults to the default `ef` in the weaviate
             server.
@@ -37,6 +41,7 @@ class WeaviateIndexer(Executor):
         :param columns: precise columns for the Indexer (used for filtering).
         """
         super().__init__(**kwargs)
+        self._match_args = match_args or {}
 
         self._index = DocumentArray(
             storage='weaviate',
@@ -80,7 +85,22 @@ class WeaviateIndexer(Executor):
         :param kwargs: additional kwargs for the endpoint
 
         """
-        docs.match(self._index, filter=parameters.get('filter', None))
+        match_args = (
+            {**self._match_args, **parameters}
+            if parameters is not None
+            else self._match_args
+        )
+        match_args = WeaviateIndexer._filter_match_params(docs, match_args)
+        docs.match(self._index, filter=parameters.get('filter', None), **match_args)
+
+
+    @staticmethod
+    def _filter_match_params(docs, match_args):
+        # get only those arguments that exist in .match
+        args = set(inspect.getfullargspec(docs.match).args)
+        args.discard('self')
+        match_args = {k: v for k, v in match_args.items() if k in args}
+        return match_args
 
     @requests(on='/delete')
     def delete(self, parameters: Dict, **kwargs):
