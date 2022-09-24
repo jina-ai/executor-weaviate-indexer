@@ -126,7 +126,7 @@ def test_filter(docker_compose):
 
 @pytest.mark.parametrize('limit', [1, 2, 3])
 def test_search_with_match_args(docs, limit, docker_compose):
-    indexer = WeaviateIndexer(name='test', match_args={'limit': limit})
+    indexer = WeaviateIndexer(name='Test', match_args={'limit': limit})
     indexer.index(docs)
     assert 'limit' in indexer._match_args.keys()
     assert indexer._match_args['limit'] == limit
@@ -147,9 +147,9 @@ def test_search_with_match_args(docs, limit, docker_compose):
     )
     indexer.index(docs)
 
-    result = indexer.search(query)
-    assert len(result) == 1
-    assert result[0].tags['text'] == 'hello'
+    indexer.search(query)
+    assert len(query[0].matches) == 1
+    assert query[0].matches[0].tags['text'] == 'hello'
 
 
 def test_persistence(docs, docker_compose):
