@@ -124,6 +124,32 @@ def test_filter(docker_compose):
     assert len(result) == 1
     assert result[0].tags['price'] == max_price
 
+@pytest.mark.parametrize('limit', [1, 2, 3])
+def test_search_with_match_args(docs, limit, docker_compose):
+    indexer = WeaviateIndexer(name='test', match_args={'limit': limit})
+    indexer.index(docs)
+    assert 'limit' in indexer._match_args.keys()
+    assert indexer._match_args['limit'] == limit
+
+    query = DocumentArray([Document(embedding=np.random.rand(128))])
+    indexer.search(query)
+
+    assert len(query[0].matches) == limit
+
+    docs[0].tags['text'] = 'hello'
+    docs[1].tags['text'] = 'world'
+    docs[2].tags['text'] = 'hello'
+
+    indexer = WeaviateIndexer(
+        name='test',
+        columns=[('text', 'str')],
+        match_args={'filter': {'path': 'text', 'operator': 'Equal', 'valueNumber': 'hello'}, 'limit': 1},
+    )
+    indexer.index(docs)
+
+    result = indexer.search(query)
+    assert len(result) == 1
+    assert result[0].tags['text'] == 'hello'
 
 
 def test_persistence(docs, docker_compose):
