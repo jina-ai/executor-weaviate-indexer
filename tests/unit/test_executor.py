@@ -143,7 +143,7 @@ def test_search_with_match_args(docs, limit, docker_compose):
     indexer = WeaviateIndexer(
         name='Test1',
         columns=[('text', 'str')],
-        match_args={'filter': {'path': 'text', 'operator': 'Equal', 'valueText': 'hello'}, 'limit': 1},
+        match_args={'filter': {'path': 'text', 'operator': 'Equal', 'valueString': 'hello'}, 'limit': 1},
     )
     indexer.index(docs)
 
