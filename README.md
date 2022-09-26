@@ -154,7 +154,7 @@ with f:
     f.post('/find', parameters={'filter': filter_})
 ```
 
-### Limit returning results
+### Limit results
 
 In some cases, you will want to limit the total number of retrieved results. `WeaviateIndexer` uses the `limit` argument 
 from the `match` function to set this limit. Note that when using `shards=N`, the `limit=K` is the number of retrieved results for **each shard** and total number of retrieved results is `N*K`. By default, `limits` is set to `20`. For more information about shards, please read [Jina Documentation](https://docs.jina.ai/fundamentals/flow/topology/#partition-data-by-using-shards)
@@ -165,7 +165,7 @@ f =  Flow().add(
     uses_with={'match_args': {'limit': 10}})
 ```
 
-### Configure the other search behaviors
+### Configure other search behaviors
 
 You can use `match_args` argument to pass arguments to the `match` function as below.
 
@@ -183,7 +183,7 @@ f =  Flow().add(
 
 ### Configure the Search Behaviors on-the-fly
 
-**At search time**, you can also pass arguments to config the `match` function. This can be useful when users want to query with different arguments for different data requests. For instance, the following codes query with a custom `limit` in `parameters` and only retrieve the top 100 nearest neighbors.
+**At search time**, you can also pass arguments to config the `match` function. This can be useful when users want to query with different arguments for different data requests. For instance, the following codes query with a custom `limit` in `parameters` and only retrieve the top 100 nearest neighbors. This will overwrite existing `match_args` if defined when initialized.
 
 ```python
 with f:
