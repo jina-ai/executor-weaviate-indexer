@@ -167,15 +167,16 @@ f =  Flow().add(
 
 ### Configure other search behaviors
 
-You can use `match_args` argument to pass arguments to the `match` function as below.
+You can use `match_args` argument to pass arguments to the `match` function as below. The match function will be called
+during `/search` endpoint.
 
 ```python
 f =  Flow().add(
      uses='jinahub+docker://WeaviateIndexer',
      uses_with={
          'match_args': {
-             'metric': 'euclidean',
-             'use_scipy': True}})
+             'limit': 5, 
+}})
 ```
 
 - For more details about overriding configurations, please refer to [here](https://docs.jina.ai/fundamentals/executor/executor-in-flow/#special-executor-attributes).
