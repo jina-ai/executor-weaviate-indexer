@@ -102,11 +102,10 @@ with f:
 print('The ID of the best match of [1,1] is: ', docs[0].matches[0].id)
 ```
 
-
 ### Using filtering
+
 To do filtering with the WeaviateIndexer you should first define columns and precise the dimension of your embedding space.
 For instance :
-
 
 ```python
 from jina import Flow
@@ -123,6 +122,7 @@ f = Flow().add(
 ```
 
 Then you can pass a filter as a parameters when searching for document:
+
 ```python
 from docarray import Document, DocumentArray
 import numpy as np
@@ -144,6 +144,7 @@ with f:
 ```
 
 ### Search using filter only
+
 You can also search Documents using just a filter query (no vector search involved) using the `/filter` endpoint.
 Given the previous setup, you can perform a filter query like so:
 
@@ -152,5 +153,43 @@ filter_ = {'path': ['price'], 'operator': 'LessThanEqual', 'valueInt': 30}
 with f:
     f.post('/find', parameters={'filter': filter_})
 ```
+
+### Limit results
+
+In some cases, you will want to limit the total number of retrieved results. `WeaviateIndexer` uses the `limit` argument 
+from the `match` function to set this limit. Note that when using `shards=N`, the `limit=K` is the number of retrieved results for **each shard** and total number of retrieved results is `N*K`. By default, `limits` is set to `20`. For more information about shards, please read [Jina Documentation](https://docs.jina.ai/fundamentals/flow/topology/#partition-data-by-using-shards)
+
+```python
+f =  Flow().add(
+    uses='jinahub+docker://WeaviateIndexer',
+    uses_with={'match_args': {'limit': 10}})
+```
+
+### Configure other search behaviors
+
+You can use `match_args` argument to pass arguments to the `match` function as below. The match function will be called
+during `/search` endpoint.
+
+```python
+f =  Flow().add(
+     uses='jinahub+docker://WeaviateIndexer',
+     uses_with={
+         'match_args': {
+             'limit': 5, 
+}})
+```
+
+- For more details about overriding configurations, please refer to [this page](https://docs.jina.ai/fundamentals/executor/executor-in-flow/#special-executor-attributes).
+- You can find more about the `match` function at [this page](https://docarray.jina.ai/api/docarray.array.mixins.match/#docarray.array.mixins.match.MatchMixin.match).
+
+### Configure the Search Behaviors on-the-fly
+
+**At search time**, you can also pass arguments to config the `match` function. This can be useful when users want to query with different arguments for different data requests. For instance, the following codes query with a custom `limit` in `parameters` and only retrieve the top 100 nearest neighbors. This will override existing `match_args` if defined during Executor initialization.
+
+```python
+with f:
+    f.search(
+        inputs=Document(text='hello'), 
+        parameters={'limit': 100})
 
 For more information please refer to the docarray [documentation](https://docarray.jina.ai/advanced/document-store/weaviate/#vector-search-with-filter)
