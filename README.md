@@ -184,7 +184,7 @@ f =  Flow().add(
 
 ### Configure the Search Behaviors on-the-fly
 
-**At search time**, you can also pass arguments to config the `match` function. This can be useful when users want to query with different arguments for different data requests. For instance, the following codes query with a custom `limit` in `parameters` and only retrieve the top 100 nearest neighbors. This will overwrite existing `match_args` if defined when initialized.
+**At search time**, you can also pass arguments to config the `match` function. This can be useful when users want to query with different arguments for different data requests. For instance, the following codes query with a custom `limit` in `parameters` and only retrieve the top 100 nearest neighbors. This will override existing `match_args` if defined during Executor initialization.
 
 ```python
 with f:
