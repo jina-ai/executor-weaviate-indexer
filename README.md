@@ -180,7 +180,7 @@ f =  Flow().add(
 ```
 
 - For more details about overriding configurations, please refer to [this page](https://docs.jina.ai/fundamentals/executor/executor-in-flow/#special-executor-attributes).
-- You can find more about the `match` function at [here](https://docarray.jina.ai/api/docarray.array.mixins.match/#docarray.array.mixins.match.MatchMixin.match)
+- You can find more about the `match` function at [this page](https://docarray.jina.ai/api/docarray.array.mixins.match/#docarray.array.mixins.match.MatchMixin.match).
 
 ### Configure the Search Behaviors on-the-fly
 
