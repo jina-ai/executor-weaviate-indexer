@@ -53,6 +53,7 @@ class WeaviateIndexer(Executor):
                 'ef_construction': ef_construction,
                 'max_connections': max_connections,
                 'columns': columns,
+                'list_like': False,
             },
         )
 
