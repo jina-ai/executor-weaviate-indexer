@@ -91,7 +91,6 @@ def test_update(docs, update_docs, docker_compose):
 
     # update first doc
     indexer.update(update_docs)
-    assert indexer._index[0].id == 'doc1'
     assert indexer._index['doc1'].text == 'modified'
 
 
