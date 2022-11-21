@@ -95,7 +95,7 @@ def test_update(docs, update_docs, docker_compose):
 
 
 def test_fill_embeddings(docker_compose):
-    indexer = WeaviateIndexer(name='Test', distance='euclidean', n_dim=1)
+    indexer = WeaviateIndexer(name='Test', distance='l2-squared', n_dim=1)
 
     indexer.index(DocumentArray([Document(id='a', embedding=np.array([1.0]))]))
     search_docs = DocumentArray([Document(id='a')])
@@ -122,6 +122,7 @@ def test_filter(docker_compose):
 
     assert len(result) == 1
     assert result[0].tags['price'] == max_price
+
 
 @pytest.mark.parametrize('limit', [1, 2, 3])
 def test_search_with_match_args(docs, limit, docker_compose):
@@ -152,15 +153,19 @@ def test_search_with_match_args(docs, limit, docker_compose):
 
 
 def test_persistence(docs, docker_compose):
-    indexer1 = WeaviateIndexer(name='Test', distance='euclidean')
+    indexer1 = WeaviateIndexer(name='Test', distance='l2-squared')
     indexer1.index(docs)
-    indexer2 = WeaviateIndexer(name='Test', distance='euclidean')
+    indexer2 = WeaviateIndexer(name='Test', distance='l2-squared')
     assert_document_arrays_equal(indexer2._index, docs)
 
 
 @pytest.mark.parametrize(
     'metric, metric_name',
-    [('euclidean', 'euclid_similarity'), ('cosine', 'cosine_similarity')],
+    [
+        ('l2-squared', 'distance'),
+        ('manhattan', 'distance'),
+        ('cosine', 'distance'),
+    ],
 )
 def test_search(metric, metric_name, docs, docker_compose):
     # test general/normal case
@@ -171,7 +176,7 @@ def test_search(metric, metric_name, docs, docker_compose):
 
     for doc in query:
         similarities = [t[metric_name].value for t in doc.matches[:, 'scores']]
-        assert sorted(similarities, reverse=True) == similarities
+        assert sorted(similarities) == similarities
 
 
 def test_clear(docs, docker_compose):
