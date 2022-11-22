@@ -27,6 +27,8 @@ class WeaviateIndexer(Executor):
         :param port: port of the Weaviate server
         :param protocol: protocol to be used. Can be 'http' or 'https'
         :param name: Weaviate class name used for the storage
+        :param distance: The distance metric used for the vector index and vector search. Can be 'cosine', 'dot',
+            'l2-squared', 'manhattan' or 'hamming'.
         :param n_dim: number of dimensions
         :param match_args: the arguments to `DocumentArray`'s match function
         :param ef: The size of the dynamic list for the nearest neighbors (used during the search). The higher ef is
