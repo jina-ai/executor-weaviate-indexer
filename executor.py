@@ -13,6 +13,7 @@ class WeaviateIndexer(Executor):
         port: int = 8080,
         protocol: str = 'http',
         name: str = 'Persisted',
+        distance: str = 'cosine',
         n_dim: int = 128,
         match_args: Optional[Dict] = None,
         ef: Optional[int] = None,
@@ -26,6 +27,8 @@ class WeaviateIndexer(Executor):
         :param port: port of the Weaviate server
         :param protocol: protocol to be used. Can be 'http' or 'https'
         :param name: Weaviate class name used for the storage
+        :param distance: The distance metric used for the vector index and vector search. Can be 'cosine', 'dot',
+            'l2-squared', 'manhattan' or 'hamming'.
         :param n_dim: number of dimensions
         :param match_args: the arguments to `DocumentArray`'s match function
         :param ef: The size of the dynamic list for the nearest neighbors (used during the search). The higher ef is
@@ -49,10 +52,12 @@ class WeaviateIndexer(Executor):
                 'protocol': protocol,
                 'name': name,
                 'n_dim': n_dim,
+                'distance': distance,
                 'ef': ef,
                 'ef_construction': ef_construction,
                 'max_connections': max_connections,
                 'columns': columns,
+                'list_like': False,
             },
         )
 

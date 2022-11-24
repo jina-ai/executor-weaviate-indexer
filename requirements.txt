@@ -1,1 +1,2 @@
-docarray[weaviate]>=0.13.20
+docarray[weaviate]>=0.19.0
+jina>=3.11.2

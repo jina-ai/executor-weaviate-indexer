@@ -31,6 +31,7 @@ f = Flow().add(
     uses='jinahub+docker://WeaviateIndexer',
     uses_with={
         'name': 'Indexer',
+        'distance': 'cosine',
         'n_dim': 256,
     }
 )
