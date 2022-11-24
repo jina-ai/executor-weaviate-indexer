@@ -50,7 +50,6 @@ import numpy as np
 f = Flow().add(uses='jinahub://WeaviateIndexer',
     uses_with={
         'name': 'Indexer',
-        'distance': 'cosine',
         'n_dim': 256,
     }
 )
